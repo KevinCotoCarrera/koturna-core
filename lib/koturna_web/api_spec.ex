@@ -1,16 +1,16 @@
 defmodule KoturnaWeb.ApiSpec do
-  alias OpenApiSpex.{OpenApi, Info, Server}
+  alias OpenApiSpex.{Info, OpenApi, Server}
 
   alias KoturnaWeb.API.{
     BuildingController,
-    UnitController,
     InspectionController,
+    MetricController,
     TicketController,
-    MetricController
+    UnitController
   }
 
   def spec do
-    %OpenApi{
+    spec = %OpenApi{
       info: %Info{
         title: "Koturna API",
         version: "1.0.0",
@@ -32,7 +32,7 @@ defmodule KoturnaWeb.ApiSpec do
         "/api/v1/metrics" => operations(MetricController, :index)
       }
     }
-    |> OpenApiSpex.resolve_schema_modules()
+    OpenApiSpex.resolve_schema_modules(spec)
   end
 
   defp operations(_module, _action) do

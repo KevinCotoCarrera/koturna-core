@@ -1,7 +1,7 @@
 defmodule Koturna.Properties do
   import Ecto.Query, warn: false
+  alias Koturna.Properties.{Asset, Building, Floor, InventoryItem, Unit}
   alias Koturna.Repo
-  alias Koturna.Properties.{Building, Floor, Unit, Asset, InventoryItem}
 
   def list_buildings(org_id) do
     Repo.all(from b in Building, where: b.organization_id == ^org_id, order_by: b.name)
@@ -53,13 +53,11 @@ defmodule Koturna.Properties do
   end
 
   def get_unit!(id) do
-    Repo.get!(Unit, id)
-    |> Repo.preload([:building, :floor, :assets, :inventory_items])
+    Repo.preload(Repo.get!(Unit, id), [:building, :floor, :assets, :inventory_items])
   end
 
   def get_unit(id) do
-    Repo.get(Unit, id)
-    |> case do
+    case Repo.get(Unit, id) do
       nil -> nil
       unit -> Repo.preload(unit, [:building, :floor])
     end

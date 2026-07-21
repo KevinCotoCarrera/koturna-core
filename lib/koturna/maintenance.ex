@@ -1,10 +1,10 @@
 defmodule Koturna.Maintenance do
   import Ecto.Query, warn: false
-  alias Koturna.Repo
-  alias Koturna.Inspections.ObservationService
   alias Koturna.Events
-  alias Koturna.Maintenance.{MaintenanceTicket, Vendor}
   alias Koturna.Inspections.Observation
+  alias Koturna.Inspections.ObservationService
+  alias Koturna.Maintenance.{MaintenanceTicket, Vendor}
+  alias Koturna.Repo
 
   def list_tickets(org_id) do
     Repo.all(
@@ -16,8 +16,12 @@ defmodule Koturna.Maintenance do
   end
 
   def get_ticket!(id) do
-    Repo.get!(MaintenanceTicket, id)
-    |> Repo.preload([:unit, :building, :assigned_vendor, :source_observation])
+    Repo.preload(Repo.get!(MaintenanceTicket, id), [
+      :unit,
+      :building,
+      :assigned_vendor,
+      :source_observation
+    ])
   end
 
   def get_ticket(id) do
@@ -73,8 +77,7 @@ defmodule Koturna.Maintenance do
   def close_ticket(%MaintenanceTicket{} = ticket, attrs \\ %{}) do
     merged = Map.merge(%{status: "closed", resolved_at: DateTime.utc_now()}, attrs)
 
-    update_ticket(ticket, merged)
-    |> case do
+    case update_ticket(ticket, merged) do
       {:ok, closed_ticket} ->
         Events.ticket_closed(closed_ticket)
         {:ok, closed_ticket}

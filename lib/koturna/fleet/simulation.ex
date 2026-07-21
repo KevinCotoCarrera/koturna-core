@@ -19,7 +19,7 @@ defmodule Koturna.Fleet.Simulation do
   def telemetry_payload(robot_id \\ "rbt-sim-001") do
     %{
       robot_id: robot_id,
-      timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
+      timestamp: DateTime.to_iso8601(DateTime.utc_now()),
       firmware_version: "v2.4.1",
       telemetry: %{
         temperature_c: round_random(18.0, 28.0, 1),
@@ -55,7 +55,7 @@ defmodule Koturna.Fleet.Simulation do
 
     %{
       robot_id: robot_id,
-      timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
+      timestamp: DateTime.to_iso8601(DateTime.utc_now()),
       event_type: Enum.random(event_types),
       data: %{
         location: "Unit 3B — Kitchen",
@@ -71,7 +71,7 @@ defmodule Koturna.Fleet.Simulation do
   def spatial_map_payload(robot_id \\ "rbt-sim-001") do
     %{
       robot_id: robot_id,
-      timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
+      timestamp: DateTime.to_iso8601(DateTime.utc_now()),
       map_type: Enum.random(["lidar_point_cloud", "3d_mesh", "floor_plan", "thermal_overlay"]),
       format: Enum.random(["pcd", "ply", "obj", "glb"]),
       resolution_cm: 1.0,
@@ -79,9 +79,8 @@ defmodule Koturna.Fleet.Simulation do
         min: %{x: -5.0, y: -3.0, z: 0.0},
         max: %{x: 5.0, y: 3.0, z: 2.5}
       },
-      storage_key:
-        "fleet/spatial_maps/#{robot_id}/#{DateTime.utc_now() |> DateTime.to_unix()}.ply",
-      checksum: "sha256:#{:crypto.strong_rand_bytes(32) |> Base.encode16(case: :lower)}"
+      storage_key: "fleet/spatial_maps/#{robot_id}/#{DateTime.to_unix(DateTime.utc_now())}.ply",
+      checksum: "sha256:#{Base.encode16(:crypto.strong_rand_bytes(32), case: :lower)}"
     }
   end
 

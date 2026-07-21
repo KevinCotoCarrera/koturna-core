@@ -1,8 +1,8 @@
 defmodule Koturna.Analytics do
   import Ecto.Query, warn: false
-  alias Koturna.Repo
   alias Koturna.Analytics.BuildingMetric
   alias Koturna.Inspections.Observation
+  alias Koturna.Repo
 
   def record_metric(attrs \\ %{}) do
     %BuildingMetric{}
@@ -33,7 +33,7 @@ defmodule Koturna.Analytics do
   def compute_building_health_score(nil), do: 0.0
 
   def compute_building_health_score(building_id) do
-    total_units = Koturna.Properties.list_units(building_id) |> length()
+    total_units = length(Koturna.Properties.list_units(building_id))
 
     if total_units == 0 do
       0.0
@@ -54,7 +54,7 @@ defmodule Koturna.Analytics do
       deduction = critical_count * 15.0 + high_count * 8.0 + medium_count * 3.0
       deduction_per_unit = deduction / total_units
 
-      max(0.0, 100.0 - deduction_per_unit) |> Float.round(1)
+      Float.round(max(0.0, 100.0 - deduction_per_unit), 1)
     end
   end
 
@@ -85,7 +85,7 @@ defmodule Koturna.Analytics do
       risk = critical * 25.0 + high * 15.0 + medium * 5.0
       risk = risk / total
 
-      min(100.0, risk) |> Float.round(1)
+      Float.round(min(100.0, risk), 1)
     end
   end
 

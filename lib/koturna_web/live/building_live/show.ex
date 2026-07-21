@@ -2,7 +2,7 @@ defmodule KoturnaWeb.BuildingLive.Show do
   use KoturnaWeb, :live_view
 
   import Ecto.Query
-  alias Koturna.{Properties, Inspections, Analytics, Repo}
+  alias Koturna.{Analytics, Inspections, Properties, Repo}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do

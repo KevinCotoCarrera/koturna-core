@@ -1,7 +1,7 @@
 defmodule Koturna.Identity do
   import Ecto.Query, warn: false
+  alias Koturna.Identity.{Organization, OrganizationMembership, User}
   alias Koturna.Repo
-  alias Koturna.Identity.{User, Organization, OrganizationMembership}
 
   def list_organizations do
     Repo.all(Organization)

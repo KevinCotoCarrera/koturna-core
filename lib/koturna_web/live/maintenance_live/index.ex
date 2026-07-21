@@ -5,7 +5,7 @@ defmodule KoturnaWeb.MaintenanceLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    org = Identity.list_organizations() |> List.first()
+    org = List.first(Identity.list_organizations())
     tickets = if org, do: Maintenance.list_tickets(org.id), else: []
     vendors = if org, do: Maintenance.list_vendors(org.id), else: []
 
@@ -48,7 +48,8 @@ defmodule KoturnaWeb.MaintenanceLive.Index do
   def handle_event("assign_vendor", %{"ticket_id" => tid, "vendor_id" => vid}, socket) do
     ticket = Enum.find(socket.assigns.tickets, &(&1.id == tid))
     Maintenance.assign_vendor(ticket, vid)
-    {:noreply, assign(socket, :show_vendor_assign, nil) |> reload()}
+    socket = assign(socket, :show_vendor_assign, nil)
+    {:noreply, reload(socket)}
   end
 
   def handle_event("show_vendor_assign", %{"id" => id}, socket) do
@@ -92,8 +93,8 @@ defmodule KoturnaWeb.MaintenanceLive.Index do
     cond do
       diff < 60 -> "just now"
       diff < 3600 -> "#{div(trunc(diff), 60)}m"
-      diff < 86400 -> "#{div(trunc(diff), 3600)}h"
-      true -> "#{div(trunc(diff), 86400)}d"
+      diff < 86_400 -> "#{div(trunc(diff), 3600)}h"
+      true -> "#{div(trunc(diff), 86_400)}d"
     end
   end
 

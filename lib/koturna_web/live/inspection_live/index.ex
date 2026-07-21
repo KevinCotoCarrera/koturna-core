@@ -1,11 +1,11 @@
 defmodule KoturnaWeb.InspectionLive.Index do
   use KoturnaWeb, :live_view
 
-  alias Koturna.{Identity, Properties, Inspections.InspectionService}
+  alias Koturna.{Identity, Inspections.InspectionService, Properties}
 
   @impl true
   def mount(_params, _session, socket) do
-    org = Identity.list_organizations() |> List.first()
+    org = List.first(Identity.list_organizations())
     sessions = if org, do: InspectionService.list_sessions(org.id), else: []
 
     socket =
@@ -85,8 +85,8 @@ defmodule KoturnaWeb.InspectionLive.Index do
     cond do
       diff < 60 -> "just now"
       diff < 3600 -> "#{div(trunc(diff), 60)}m ago"
-      diff < 86400 -> "#{div(trunc(diff), 3600)}h ago"
-      true -> "#{div(trunc(diff), 86400)}d ago"
+      diff < 86_400 -> "#{div(trunc(diff), 3600)}h ago"
+      true -> "#{div(trunc(diff), 86_400)}d ago"
     end
   end
 end

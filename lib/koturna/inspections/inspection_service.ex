@@ -1,8 +1,8 @@
 defmodule Koturna.Inspections.InspectionService do
   import Ecto.Query, warn: false
-  alias Koturna.Repo
-  alias Koturna.Inspections.{InspectionSession, InspectionCheckpoint, Observation}
   alias Koturna.Events
+  alias Koturna.Inspections.{InspectionCheckpoint, InspectionSession, Observation}
+  alias Koturna.Repo
 
   @doc """
   Creates a new inspection session in 'pending' state.
@@ -112,13 +112,17 @@ defmodule Koturna.Inspections.InspectionService do
   end
 
   def get_session!(id) do
-    Repo.get!(InspectionSession, id)
-    |> Repo.preload([:unit, :building, :inspector, :checkpoints, :observations])
+    Repo.preload(Repo.get!(InspectionSession, id), [
+      :unit,
+      :building,
+      :inspector,
+      :checkpoints,
+      :observations
+    ])
   end
 
   def get_session(id) do
-    Repo.get(InspectionSession, id)
-    |> case do
+    case Repo.get(InspectionSession, id) do
       nil -> nil
       session -> Repo.preload(session, [:unit, :building, :inspector, :checkpoints])
     end
@@ -148,7 +152,6 @@ defmodule Koturna.Inspections.InspectionService do
   end
 
   def get_observation!(id) do
-    Repo.get!(Observation, id)
-    |> Repo.preload([:inspection_session, :checkpoint, :media_references])
+    Repo.preload(Repo.get!(Observation, id), [:inspection_session, :checkpoint, :media_references])
   end
 end

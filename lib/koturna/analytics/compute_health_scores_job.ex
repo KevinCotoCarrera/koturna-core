@@ -5,10 +5,8 @@ defmodule Koturna.Analytics.ComputeHealthScoresJob do
 
   @impl Oban.Worker
   def perform(_job) do
-    Identity.list_organizations()
-    |> Enum.each(fn org ->
-      Properties.list_buildings(org.id)
-      |> Enum.each(fn building ->
+    Enum.each(Identity.list_organizations(), fn org ->
+      Enum.each(Properties.list_buildings(org.id), fn building ->
         score = Analytics.compute_building_health_score(building.id)
 
         Koturna.Analytics.record_metric(%{

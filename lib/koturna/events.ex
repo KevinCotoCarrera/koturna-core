@@ -1,7 +1,7 @@
 defmodule Koturna.Events do
-  @topic "koturna:events"
-
   alias Phoenix.PubSub
+
+  @topic "koturna:events"
 
   def subscribe do
     PubSub.subscribe(Koturna.PubSub, @topic)
@@ -12,7 +12,7 @@ defmodule Koturna.Events do
       event: event_name,
       payload: payload,
       metadata: %{
-        timestamp: DateTime.utc_now() |> DateTime.to_iso8601(),
+        timestamp: DateTime.to_iso8601(DateTime.utc_now()),
         source: "koturna"
       }
     }
@@ -34,8 +34,10 @@ defmodule Koturna.Events do
 
   def inspection_completed(session) do
     critical_count =
-      Koturna.Inspections.InspectionService.list_observations(session.id)
-      |> Enum.count(&(&1.severity == "critical"))
+      Enum.count(
+        Koturna.Inspections.InspectionService.list_observations(session.id),
+        &(&1.severity == "critical")
+      )
 
     broadcast("inspection.completed", %{
       inspection_session_id: session.id,

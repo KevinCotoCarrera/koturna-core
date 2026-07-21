@@ -103,7 +103,7 @@ defmodule KoturnaWeb.InspectionLive.Show do
   end
 
   def handle_event("start_session", _, socket) do
-    inspector = Koturna.Identity.list_users() |> List.first()
+    inspector = List.first(Koturna.Identity.list_users())
 
     case InspectionService.start_session(socket.assigns.session, inspector && inspector.id) do
       {:ok, session} -> {:noreply, assign(socket, :session, session)}

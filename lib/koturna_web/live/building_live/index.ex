@@ -1,15 +1,15 @@
 defmodule KoturnaWeb.BuildingLive.Index do
   use KoturnaWeb, :live_view
 
-  alias Koturna.{Identity, Properties, Analytics}
+  alias Koturna.{Analytics, Identity, Properties}
 
   @impl true
   def mount(_params, _session, socket) do
-    org = Identity.list_organizations() |> List.first()
+    org = List.first(Identity.list_organizations())
     buildings = if org, do: Properties.list_buildings(org.id), else: []
 
     scores =
-      Enum.map(buildings, fn b ->
+      Map.new(buildings, fn b ->
         score = Analytics.compute_building_health_score(b.id)
 
         grade =
@@ -23,7 +23,6 @@ defmodule KoturnaWeb.BuildingLive.Index do
 
         {b.id, %{score: score, grade: grade}}
       end)
-      |> Map.new()
 
     socket =
       assign(socket,

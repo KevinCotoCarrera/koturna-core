@@ -2,109 +2,20 @@ defmodule KoturnaWeb.OperationsLive do
   use KoturnaWeb, :live_view
 
   import Ecto.Query
-  alias Koturna.{Identity, Properties, Inspections, Maintenance, Repo, Analytics}
+  alias Koturna.{Analytics, Identity, Inspections, Maintenance, Properties, Repo}
 
   @impl true
   def mount(_params, _session, socket) do
-    org = Identity.list_organizations() |> List.first()
+    org = List.first(Identity.list_organizations())
 
     {buildings, stats, queue, events} =
       if org do
         org_id = org.id
         buildings = Properties.list_buildings(org_id)
-
-        total_units =
-          buildings
-          |> Enum.map(& &1.id)
-          |> Enum.map(fn bid -> length(Properties.list_units(bid)) end)
-          |> Enum.sum()
-
-        health_scores =
-          Enum.map(buildings, fn b -> {b, Analytics.compute_building_health_score(b.id)} end)
-
-        avg_health =
-          if buildings != [] do
-            scores = Enum.map(health_scores, fn {_, s} -> s end)
-            Enum.sum(scores) / length(buildings)
-          else
-            0
-          end
-
-        active =
-          Repo.aggregate(
-            from(s in Inspections.InspectionSession,
-              where: s.organization_id == ^org_id and s.status == "in_progress"
-            ),
-            :count
-          )
-
-        tickets = Maintenance.list_tickets(org_id)
-        open_tickets = Enum.count(tickets, &(&1.status in ~w(open assigned in_progress)))
-        urgent = Enum.count(tickets, &(&1.priority == "urgent"))
-
-        critical_obs =
-          Repo.aggregate(
-            from(o in Inspections.Observation,
-              join: s in Inspections.InspectionSession,
-              on: s.id == o.inspection_session_id,
-              where: s.organization_id == ^org_id and o.severity == "critical"
-            ),
-            :count
-          )
-
-        stats = %{
-          health_score: Float.round(avg_health, 1),
-          total_buildings: length(buildings),
-          total_units: total_units,
-          active_inspections: active,
-          open_tickets: open_tickets,
-          urgent_items: urgent,
-          critical_observations: critical_obs
-        }
-
-        queue_items =
-          Repo.all(
-            from o in Inspections.Observation,
-              join: s in Inspections.InspectionSession,
-              on: s.id == o.inspection_session_id,
-              where: s.organization_id == ^org_id and o.severity in ~w(high critical),
-              order_by: [desc: o.inserted_at],
-              limit: 10,
-              preload: [inspection_session: [unit: :building]]
-          )
-          |> Enum.map(fn o ->
-            unit = o.inspection_session.unit
-
-            %{
-              building:
-                if(unit && unit.building, do: unit.building.name, else: unit && unit.building_id),
-              unit: if(unit, do: unit.unit_number, else: nil),
-              summary: o.summary,
-              status: o.observation_type,
-              time_ago: time_ago(o.inserted_at),
-              severity: o.severity,
-              id: o.id
-            }
-          end)
-
-        recent_events =
-          Repo.all(
-            from t in Maintenance.MaintenanceTicket,
-              where: t.organization_id == ^org_id,
-              order_by: [desc: t.inserted_at],
-              limit: 10,
-              preload: [:unit, :building]
-          )
-          |> Enum.map(fn t ->
-            %{
-              title: t.title,
-              description: "#{inspect(t.status)} ticket",
-              time: time_ago(t.inserted_at),
-              color: ticket_color(t.status)
-            }
-          end)
-
-        {buildings, stats, queue_items, recent_events}
+        stats = load_stats(org_id, buildings)
+        queue = load_queue(org_id)
+        events = load_events(org_id)
+        {buildings, stats, queue, events}
       else
         {[], default_stats(), [], []}
       end
@@ -119,6 +30,97 @@ defmodule KoturnaWeb.OperationsLive do
       )
 
     {:ok, socket}
+  end
+
+  defp load_stats(org_id, buildings) do
+    total_units = buildings |> Enum.map(& &1.id) |> Enum.map(fn bid -> length(Properties.list_units(bid)) end) |> Enum.sum()
+
+    health_scores = Enum.map(buildings, fn b -> {b, Analytics.compute_building_health_score(b.id)} end)
+    avg_health =
+      if buildings != [] do
+        scores = Enum.map(health_scores, fn {_, s} -> s end)
+        Enum.sum(scores) / length(buildings)
+      else
+        0
+      end
+
+    active =
+      Repo.aggregate(
+        from(s in Inspections.InspectionSession,
+          where: s.organization_id == ^org_id and s.status == "in_progress"
+        ),
+        :count
+      )
+
+    tickets = Maintenance.list_tickets(org_id)
+    open_tickets = Enum.count(tickets, &(&1.status in ~w(open assigned in_progress)))
+    urgent = Enum.count(tickets, &(&1.priority == "urgent"))
+
+    critical_obs =
+      Repo.aggregate(
+        from(o in Inspections.Observation,
+          join: s in Inspections.InspectionSession,
+          on: s.id == o.inspection_session_id,
+          where: s.organization_id == ^org_id and o.severity == "critical"
+        ),
+        :count
+      )
+
+    %{
+      health_score: Float.round(avg_health, 1),
+      total_buildings: length(buildings),
+      total_units: total_units,
+      active_inspections: active,
+      open_tickets: open_tickets,
+      urgent_items: urgent,
+      critical_observations: critical_obs
+    }
+  end
+
+  defp load_queue(org_id) do
+    observations =
+      Repo.all(
+        from o in Inspections.Observation,
+          join: s in Inspections.InspectionSession,
+          on: s.id == o.inspection_session_id,
+          where: s.organization_id == ^org_id and o.severity in ~w(high critical),
+          order_by: [desc: o.inserted_at],
+          limit: 10,
+          preload: [inspection_session: [unit: :building]]
+      )
+
+    Enum.map(observations, fn o ->
+      unit = o.inspection_session.unit
+      %{
+        building: if(unit && unit.building, do: unit.building.name, else: unit && unit.building_id),
+        unit: if(unit, do: unit.unit_number, else: nil),
+        summary: o.summary,
+        status: o.observation_type,
+        time_ago: time_ago(o.inserted_at),
+        severity: o.severity,
+        id: o.id
+      }
+    end)
+  end
+
+  defp load_events(org_id) do
+    tickets =
+      Repo.all(
+        from t in Maintenance.MaintenanceTicket,
+          where: t.organization_id == ^org_id,
+          order_by: [desc: t.inserted_at],
+          limit: 10,
+          preload: [:unit, :building]
+      )
+
+    Enum.map(tickets, fn t ->
+      %{
+        title: t.title,
+        description: "#{inspect(t.status)} ticket",
+        time: time_ago(t.inserted_at),
+        color: ticket_color(t.status)
+      }
+    end)
   end
 
   @impl true
@@ -227,8 +229,8 @@ defmodule KoturnaWeb.OperationsLive do
     cond do
       diff < 60 -> "just now"
       diff < 3600 -> "#{div(trunc(diff), 60)}m ago"
-      diff < 86400 -> "#{div(trunc(diff), 3600)}h ago"
-      true -> "#{div(trunc(diff), 86400)}d ago"
+      diff < 86_400 -> "#{div(trunc(diff), 3600)}h ago"
+      true -> "#{div(trunc(diff), 86_400)}d ago"
     end
   end
 

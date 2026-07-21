@@ -2,11 +2,11 @@ defmodule KoturnaWeb.DashboardLive do
   use KoturnaWeb, :live_view
 
   import Ecto.Query
-  alias Koturna.{Identity, Properties, Inspections, Maintenance, Repo}
+  alias Koturna.{Identity, Inspections, Maintenance, Properties, Repo}
 
   @impl true
   def mount(_params, _session, socket) do
-    org = Identity.list_organizations() |> List.first()
+    org = List.first(Identity.list_organizations())
 
     stats =
       if org do
