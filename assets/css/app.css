@@ -1,0 +1,83 @@
+@import "tailwindcss" source(none);
+@source "../css";
+@source "../js";
+@source "../../lib/koturna_web";
+
+@plugin "../vendor/heroicons";
+
+@custom-variant phx-click-loading (.phx-click-loading&, .phx-click-loading &);
+@custom-variant phx-submit-loading (.phx-submit-loading&, .phx-submit-loading &);
+@custom-variant phx-change-loading (.phx-change-loading&, .phx-change-loading &);
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+[data-phx-session], [data-phx-teleported-src] { display: contents }
+
+@layer base {
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { @apply bg-neutral-50 text-neutral-900; font-feature-settings: "cv02","cv03","cv04","cv11"; }
+}
+
+@layer components {
+  .sidebar-link { @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-all duration-150; }
+  .sidebar-link.active { @apply text-neutral-900 bg-neutral-100; }
+
+  .stat-card { @apply bg-white rounded-2xl p-6 shadow-sm border border-neutral-100; }
+  .queue-card { @apply bg-white rounded-2xl p-5 shadow-sm border border-neutral-100 hover:shadow-md hover:border-neutral-200 transition-all duration-200 cursor-pointer; }
+  .insight-panel { @apply bg-white rounded-2xl p-6 shadow-sm border border-neutral-100; }
+  .activity-item { @apply flex items-start gap-3 py-3 border-b border-neutral-50 last:border-0; }
+
+  .grade-a { @apply text-emerald-600 bg-emerald-50; }
+  .grade-b { @apply text-blue-600 bg-blue-50; }
+  .grade-c { @apply text-amber-600 bg-amber-50; }
+  .grade-d { @apply text-orange-600 bg-orange-50; }
+  .grade-f { @apply text-red-600 bg-red-50; }
+
+  .risk-low { @apply text-emerald-600 bg-emerald-50; }
+  .risk-medium { @apply text-amber-600 bg-amber-50; }
+  .risk-high { @apply text-orange-600 bg-orange-50; }
+  .risk-critical { @apply text-red-600 bg-red-50; }
+
+  .btn-primary { @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-neutral-900 hover:bg-neutral-800 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 disabled:opacity-50; }
+  .btn-secondary { @apply inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-neutral-700 bg-white border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2; }
+  .btn-ghost { @apply inline-flex items-center justify-center px-3 py-2 rounded-xl text-sm font-medium text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-all duration-150; }
+
+  .grade-badge { @apply inline-flex items-center justify-center w-10 h-10 rounded-xl text-base font-bold; }
+  .grade-badge.lg { @apply w-14 h-14 text-xl; }
+  .grade-badge.sm { @apply w-8 h-8 text-xs; }
+
+  .risk-pill { @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold; }
+  .sla-badge { @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold; }
+  .sla-badge.at-risk { @apply text-red-600 bg-red-50; }
+  .sla-badge.ok { @apply text-emerald-600 bg-emerald-50; }
+  .sla-badge.warning { @apply text-amber-600 bg-amber-50; }
+
+  .workflow-card { @apply bg-white rounded-2xl p-5 shadow-sm border border-neutral-100; }
+  .kanban-column { @apply bg-neutral-50 rounded-2xl p-4 min-h-[400px]; }
+
+  .drawer-overlay { @apply fixed inset-0 bg-black/20 z-40 transition-opacity; }
+  .drawer-panel { @apply fixed top-0 right-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 overflow-y-auto; }
+
+  .timeline-dot { @apply w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm; }
+  .timeline-line { @apply w-0.5 bg-neutral-200; }
+
+  .progress-bar { @apply h-1.5 bg-neutral-100 rounded-full overflow-hidden; }
+  .progress-fill { @apply h-full bg-neutral-900 rounded-full transition-all duration-500; }
+
+  .stepper-step { @apply flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150; }
+  .stepper-step.active { @apply bg-neutral-100; }
+  .stepper-step.completed { @apply text-neutral-500; }
+  .stepper-step.current { @apply text-neutral-900 font-semibold; }
+
+  .empty-state { @apply flex flex-col items-center justify-center py-16 text-center; }
+
+  .observation-input { @apply w-full rounded-xl border-0 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-300 transition-all; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar { @apply fixed inset-y-0 left-0 z-50 w-72 transform -translate-x-full transition-transform duration-200; }
+    .sidebar.open { @apply translate-x-0; }
+  }
+}
