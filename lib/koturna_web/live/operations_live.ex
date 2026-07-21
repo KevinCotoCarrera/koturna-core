@@ -33,9 +33,15 @@ defmodule KoturnaWeb.OperationsLive do
   end
 
   defp load_stats(org_id, buildings) do
-    total_units = buildings |> Enum.map(& &1.id) |> Enum.map(fn bid -> length(Properties.list_units(bid)) end) |> Enum.sum()
+    total_units =
+      buildings
+      |> Enum.map(& &1.id)
+      |> Enum.map(fn bid -> length(Properties.list_units(bid)) end)
+      |> Enum.sum()
 
-    health_scores = Enum.map(buildings, fn b -> {b, Analytics.compute_building_health_score(b.id)} end)
+    health_scores =
+      Enum.map(buildings, fn b -> {b, Analytics.compute_building_health_score(b.id)} end)
+
     avg_health =
       if buildings != [] do
         scores = Enum.map(health_scores, fn {_, s} -> s end)
@@ -91,8 +97,10 @@ defmodule KoturnaWeb.OperationsLive do
 
     Enum.map(observations, fn o ->
       unit = o.inspection_session.unit
+
       %{
-        building: if(unit && unit.building, do: unit.building.name, else: unit && unit.building_id),
+        building:
+          if(unit && unit.building, do: unit.building.name, else: unit && unit.building_id),
         unit: if(unit, do: unit.unit_number, else: nil),
         summary: o.summary,
         status: o.observation_type,

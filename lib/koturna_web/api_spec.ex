@@ -32,6 +32,7 @@ defmodule KoturnaWeb.ApiSpec do
         "/api/v1/metrics" => operations(MetricController, :index)
       }
     }
+
     OpenApiSpex.resolve_schema_modules(spec)
   end
 
